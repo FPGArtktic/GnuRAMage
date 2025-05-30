@@ -141,14 +141,6 @@ temp_*
 forgotten_project_from_2019/
 ```
 
-### [CRON] Section
-
-```ini
-# When to run automatic syncs (cron format)
-# Default: every 5 minutes (because patience is overrated)
-schedule = */5 * * * *
-```
-
 ## Usage
 
 ### Basic Syntax
