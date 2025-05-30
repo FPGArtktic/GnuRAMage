@@ -31,7 +31,7 @@ GnuRAMage comes packed with features that would make even the most demanding sys
 
 - **Automatic File Copying**: Intelligently copies files from hard disk to RAM disk (because manual copying is for peasants)
 - **Periodic Synchronization**: Regular sync-back to hard disk (because RAM is volatile, unlike our commitment to data integrity)
-- **Exclusion Patterns**: Support for excluding files and directories (because not everything deserves the RAM treatment)
+- **Exclusion Patterns**: Support for excluding files and directories (because not everything deserves the store non-volatile)
 - **INI Configuration**: Human-readable configuration format (unlike some tools that use hieroglyphics)
 - **Comprehensive Logging**: Multiple log levels and optional error-only logs (for when you want to pretend everything is fine)
 - **Dry Run Mode**: Test operations without actually doing anything (for the cautious and the paranoid)
@@ -91,7 +91,8 @@ In true GNU tradition, GnuRAMage is:
 ### The Lazy Way
 
 ```bash
-wget <direct-link-to-script>
+wget https://github.com/FPGArtktic/GnuRAMage/blob/master/gramage.sh
+wget https://github.com/FPGArtktic/GnuRAMage/blob/master/GnuRAMage.ini
 chmod +x gramage.sh
 # Edit configuration as needed
 ```
