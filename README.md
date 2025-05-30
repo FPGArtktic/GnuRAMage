@@ -126,7 +126,7 @@ ramdisk_dir = /path/to/your/blazing/fast/ramdisk
 
 ### [EXCLUDE] Section
 
-Patterns for files you don't want cluttering your precious RAM:
+Patterns for files you don't want cluttering your HDD:
 
 ```ini
 # Backup files (because backup-of-backups is just hoarding)
