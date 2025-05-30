@@ -73,8 +73,8 @@ In true GNU tradition, GnuRAMage is:
 
 1. Clone this repository (or download it like it's 1999):
    ```bash
-   git clone <repository-url>
-   cd priv_ram_disk
+   git clone git@github.com:FPGArtktic/GnuRAMage.git
+   cd GnuRAMage
    ```
 
 2. Make the script executable (because files don't execute themselves):
