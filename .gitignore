@@ -1,0 +1,3 @@
+gramage_copy_to_ram.sh
+gramage_sync_to_disk.sh
+*.log
