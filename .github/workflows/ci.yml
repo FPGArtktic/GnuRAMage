@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          severity: warning
+          scandir: .
+          format: gcc
+
+  test:
+    name: Tests (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # No "container" key → runs directly on the runner VM.
+          - name: ubuntu-latest
+            install: sudo apt-get update -qq && sudo apt-get install -y -qq rsync
+          - name: debian-bookworm
+            container: debian:bookworm
+            install: apt-get update -qq && apt-get install -y -qq rsync findutils procps
+          - name: archlinux
+            container: archlinux:latest
+            install: pacman -Sy --noconfirm --needed rsync findutils procps-ng
+    container: ${{ matrix.container }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: ${{ matrix.install }}
+
+      - name: Versions
+        run: |
+          bash --version | head -1
+          rsync --version | head -1
+
+      - name: Run test suite
+        working-directory: test
+        run: |
+          chmod +x ../gramage.sh ./*.sh
+          ./run_test.sh
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs-${{ matrix.name }}
+          path: |
+            /tmp/ram_disk_test_logs.txt
+            /tmp/ram_disk_test_errors.txt
+          if-no-files-found: ignore
+
+  docs:
+    name: Docs (mkdocs --strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
+      - name: Install MkDocs
+        run: python -m pip install -r docs/requirements.txt
+
+      - name: Build
+        run: mkdocs build --strict

@@ -1,0 +1,3 @@
+# ShellCheck configuration — CI runs: shellcheck -S warning gramage.sh test/*.sh
+shell=bash
+source-path=SCRIPTDIR
