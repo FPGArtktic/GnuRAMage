@@ -309,12 +309,12 @@ mkdir -p "$DEFAULT_SOURCE_DIR"
 # Build rsync command as array
 RSYNC_CMD=(rsync -a)
 
-# Add options based on settings
-if [ "$1" = "--verbose" ]; then
+# Add options based on the flag passed to this script (--verbose or --dry-run)
+if [ "\$1" = "--verbose" ]; then
     RSYNC_CMD+=( -v )
 fi
 
-if [ "$1" = "--dry-run" ]; then
+if [ "\$1" = "--dry-run" ]; then
     RSYNC_CMD+=( --dry-run )
 fi
 
