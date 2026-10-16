@@ -1,3 +1,15 @@
+# Runtime-generated worker scripts
 gramage_copy_to_ram.sh
 gramage_sync_to_disk.sh
+
+# Logs
 *.log
+
+# Artefact produced by test/test_generator.sh
+test/gnuramage_test.ini
+
+# Release build output
+dist/
+
+# Local working brief for Claude Code sessions — intentionally not published
+CLAUDE.md
