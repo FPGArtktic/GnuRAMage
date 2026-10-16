@@ -136,12 +136,15 @@ get_timestamp() {
 log() {
     local level="$1"
     local message="$2"
-    local timestamp=$(get_timestamp)
-    local numeric_level=$(get_log_level_value "$level")
-    local current_level=$(get_log_level_value "$LOG_LEVEL")
-    
+    local timestamp
+    local numeric_level
+    local current_level
+    timestamp=$(get_timestamp)
+    numeric_level=$(get_log_level_value "$level")
+    current_level=$(get_log_level_value "$LOG_LEVEL")
+
     # Only log if the message level is less than or equal to the current log level
-    if [ $numeric_level -le $current_level ]; then
+    if [ "$numeric_level" -le "$current_level" ]; then
         local log_message="[$timestamp] [$level] $message"
         
         # If not in dry-run mode or if it's an error, show on console
@@ -223,6 +226,8 @@ parse_config_file() {
         if grep -q "^verify_checksums" "$CONFIG_FILE"; then
             verify_checksums_val=$(grep "^verify_checksums" "$CONFIG_FILE" | cut -d= -f2 | tr -d ' ' | tr '[:upper:]' '[:lower:]')
             if [ "$verify_checksums_val" = "true" ] || [ "$verify_checksums_val" = "1" ] || [ "$verify_checksums_val" = "yes" ]; then
+                # TODO(defect G): not yet passed to rsync as --checksum; wired in 1.1.0.
+                # shellcheck disable=SC2034
                 VERIFY_CHECKSUMS=true
                 log_debug "Checksum verification enabled"
             fi
@@ -266,8 +271,7 @@ check_directories() {
     if [ ! -d "$DEFAULT_RAMDISK_DIR" ]; then
         log_info "Creating RAM disk directory: $DEFAULT_RAMDISK_DIR"
         if ! $DRY_RUN; then
-            mkdir -p "$DEFAULT_RAMDISK_DIR"
-            if [ $? -ne 0 ]; then
+            if ! mkdir -p "$DEFAULT_RAMDISK_DIR"; then
                 log_error "Failed to create RAM disk directory: $DEFAULT_RAMDISK_DIR"
                 exit 1
             fi
@@ -328,8 +332,11 @@ EOF
         fi
         echo "RSYNC_CMD+=( --delete \"$DEFAULT_RAMDISK_DIR/\" \"$DEFAULT_SOURCE_DIR/\" )" >> "$RSYNC_SCRIPT"
         echo '' >> "$RSYNC_SCRIPT"
+        # The ${RSYNC_CMD...} expansions below are literal text for the generated script.
+        # shellcheck disable=SC2016
         echo '#echo "[INFO] Rsync command: ${RSYNC_CMD[*]}"' >> "$RSYNC_SCRIPT"
         echo '# Execute rsync command' >> "$RSYNC_SCRIPT"
+        # shellcheck disable=SC2016
         echo '"${RSYNC_CMD[@]}"' >> "$RSYNC_SCRIPT"
         
         # Make the script executable
@@ -397,20 +404,16 @@ execute_cp_script() {
     if $VERBOSE; then
         verbose_flag="--verbose"
     fi
-    
-    local dry_run_flag=""
-    if $DRY_RUN; then
-        dry_run_flag="--dry-run"
-    fi
-    
+
     if ! $DRY_RUN; then
+        local cp_status=0
         if $VERBOSE; then
-            "$CP_SCRIPT" "$verbose_flag"
+            "$CP_SCRIPT" "$verbose_flag" || cp_status=$?
         else
-            "$CP_SCRIPT" > /dev/null
+            "$CP_SCRIPT" > /dev/null || cp_status=$?
         fi
-        
-        if [ $? -ne 0 ]; then
+
+        if [ "$cp_status" -ne 0 ]; then
             log_error "Failed to copy files to RAM disk"
             return 1
         else
@@ -433,22 +436,18 @@ execute_rsync_script() {
     if $VERBOSE; then
         verbose_flag="--verbose"
     fi
-    
-    local dry_run_flag=""
-    if $DRY_RUN; then
-        dry_run_flag="--dry-run"
-    fi
-    
+
     if ! $DRY_RUN; then
+        local rsync_status=0
         if $VERBOSE; then
-            "$RSYNC_SCRIPT" "$verbose_flag" 2> /tmp/rsync_error.log
+            "$RSYNC_SCRIPT" "$verbose_flag" 2> /tmp/rsync_error.log || rsync_status=$?
         else
-            "$RSYNC_SCRIPT" > /dev/null 2> /tmp/rsync_error.log
+            "$RSYNC_SCRIPT" > /dev/null 2> /tmp/rsync_error.log || rsync_status=$?
         fi
-        
-        local rsync_status=$?
-        if [ $rsync_status -ne 0 ]; then
-            local error_msg=$(cat /tmp/rsync_error.log)
+
+        if [ "$rsync_status" -ne 0 ]; then
+            local error_msg
+            error_msg=$(cat /tmp/rsync_error.log)
             log_error "Failed to sync files to hard disk: Error code $rsync_status"
             log_error "Rsync error: $error_msg"
             # Add rsync errors to the error log as well
@@ -475,8 +474,8 @@ wait_for_key() {
     local interval=$1
     log_info "Syncing every $interval seconds. Press any key to stop..."
     
-    # Use read with timeout
-    if read -t "$interval" -n 1 key; then
+    # Use read with timeout (the key itself is irrelevant; it lands in REPLY)
+    if read -r -t "$interval" -n 1; then
         log_info "Key pressed. Stopping synchronization..."
         return 1  # Key was pressed
     else
@@ -531,15 +530,16 @@ cleanup() {
 
 # Generate report
 generate_report() {
-    local end_time=$(date +%s)
+    local end_time
+    end_time=$(date +%s)
     local duration=$((end_time - START_TIME))
     local hours=$((duration / 3600))
     local minutes=$(( (duration % 3600) / 60 ))
     local seconds=$((duration % 60))
     
     log_info "===== RAM Disk Sync Report ====="
-    log_info "Start time: $(date -d @$START_TIME)"
-    log_info "End time: $(date -d @$end_time)"
+    log_info "Start time: $(date -d "@$START_TIME")"
+    log_info "End time: $(date -d "@$end_time")"
     log_info "Duration: ${hours}h ${minutes}m ${seconds}s"
     log_info "Files copied to RAM disk: $TOTAL_FILES_COPIED"
     log_info "Sync operations performed: $TOTAL_FILES_SYNCED"
@@ -559,8 +559,7 @@ run_sync_loop() {
     START_TIME=$(date +%s)
     
     # Execute copy script once at start
-    execute_cp_script
-    if [ $? -ne 0 ]; then
+    if ! execute_cp_script; then
         log_error "Initial copy failed. Exiting."
         exit 1
     fi

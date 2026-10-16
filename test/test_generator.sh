@@ -89,7 +89,7 @@ done
 echo "Creating $FILE_COUNT random files..."
 for ((i=1; i<=FILE_COUNT; i++)); do
     # Decide whether to put the file in a directory or the root
-    if [ $((RANDOM % 3)) -eq 0 ] || [ $DIR_COUNT -eq 0 ]; then
+    if [ $((RANDOM % 3)) -eq 0 ] || [ "$DIR_COUNT" -eq 0 ]; then
         # Put in root
         file_path="$TEST_SOURCE_DIR/file_$i.txt"
     else
@@ -98,7 +98,7 @@ for ((i=1; i<=FILE_COUNT; i++)); do
         dir_path="$TEST_SOURCE_DIR/dir_$dir_num"
         
         # Check if there are subdirectories
-        subdirs=($(find "$dir_path" -type d))
+        mapfile -t subdirs < <(find "$dir_path" -type d)
         if [ ${#subdirs[@]} -gt 1 ]; then
             # Pick a random subdirectory
             subdir_index=$((RANDOM % ${#subdirs[@]}))
