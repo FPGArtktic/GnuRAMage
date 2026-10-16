@@ -65,7 +65,7 @@ jobs:
           cat dist/RELEASE_NOTES.md
 
       - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: GnuRAMage ${{ github.ref_name }}
           body_path: dist/RELEASE_NOTES.md
