@@ -20,6 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README rewritten: badges, diagram, configuration and CLI reference, honest
   statement of 1.0.0 limitations. Download instructions now use
   `raw.githubusercontent.com` URLs (the previous `blob` URLs returned HTML).
+- `gramage.sh` and `test/*.sh` are ShellCheck-clean at severity `warning`
+  (no behaviour change).
+
+### Fixed
+- The generated `gramage_sync_to_disk.sh` ignored its `--verbose` and
+  `--dry-run` flags: `$1` was expanded at generation time instead of inside the
+  worker script, so a manual `gramage_sync_to_disk.sh --dry-run` performed a
+  real `rsync --delete`. The script now tests its own first argument
+  (known issue K).
 
 ### Planned for 1.1.0 (see *Known issues* and *Roadmap* in the documentation)
 - Refuse sync-back when the RAM directory is empty, lacks the sentinel file, or is

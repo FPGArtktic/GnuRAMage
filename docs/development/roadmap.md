@@ -21,7 +21,8 @@ timeline
 
 ## Phase 0 — CI green
 
-- [ ] Fix all ShellCheck findings (issue J) without behaviour change.
+- [x] Fix all ShellCheck findings (issue J) without behaviour change.
+- [x] Generated sync script honours `--verbose` / `--dry-run` (issue K).
 - [ ] Confirm `ci.yml` passes on Ubuntu, Debian and Arch.
 - [ ] Docs build with `mkdocs build --strict`.
 

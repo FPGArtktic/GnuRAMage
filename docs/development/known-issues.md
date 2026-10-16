@@ -27,6 +27,7 @@ quadrantChart
     H fixed tmp path: [0.15, 0.25]
     I no lock: [0.20, 0.45]
     J shellcheck: [0.30, 0.15]
+    K worker flags ignored: [0.05, 0.50]
 ```
 
 ## Details
@@ -149,6 +150,22 @@ Two instances on the same configuration interleave `--delete` runs.
 `shellcheck -S warning gramage.sh test/*.sh` reports SC2155, SC2034, SC2119/2120,
 SC2162, SC2016, SC2181, SC2086, SC2207. The CI lint job stays red until they are
 fixed; the fixes are mechanical and behaviour-neutral.
+
+### K — Generated sync script ignored `--verbose` / `--dry-run`  `S2` — **fixed on master**
+
+The heredoc in `generate_rsync_script` is unquoted, so `"$1"` was expanded by
+`gramage.sh` at generation time (always empty) rather than written literally.
+The generated `gramage_sync_to_disk.sh` therefore compared `""` with the flag and
+ignored it — a manual `gramage_sync_to_disk.sh --dry-run` performed a real
+`rsync --delete`. `gramage_copy_to_ram.sh` escaped the expansion correctly.
+
+```bash
+./gramage.sh --config test/gramage_test.ini --script-gen-only
+grep -n '"--dry-run"' gramage_sync_to_disk.sh     # 1.0.0: if [ "" = "--dry-run" ]
+```
+
+**Fix:** escape as `\$1` (commit `02f658b`). The 1.1.0 worker-script redesign
+replaces the heredoc with a rendered argument array.
 
 ## Minor
 
