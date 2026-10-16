@@ -1,6 +1,6 @@
 #!/bin/bash
 # GnuRAMage: Advanced RAM Disk Synchronization Tool
-# Version: 1.0.0
+# Version: 1.0.1
 #
 # Copyright (C) 2025 Mateusz Okulanis
 # Email: FPGArtktic@outlook.com

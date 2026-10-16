@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned for 1.1.0 (see *Known issues* and *Roadmap* in the documentation)
+- Refuse sync-back when the RAM directory is empty, lacks the sentinel file, or is
+  not on tmpfs/ramfs (`require_ramfs`).
+- Signal-driven wait loop usable under systemd/nohup (no stdin dependency);
+  SIGTERM/SIGINT perform a final sync and exit.
+- Path normalisation; `rsync` used for the initial copy with the same exclude list
+  as the sync-back; top-level dotfiles included.
+- Rewritten INI parser (exact key match, paths with spaces, no pattern filtering by
+  keyword).
+- `verify_checksums` wired to `rsync --checksum`.
+- `mktemp` for temporary files; `flock` instance lock.
+- `--version`, `--sync-now`, `SIGUSR1` → immediate sync; systemd unit in `contrib/`.
+- Test suite migrated to bats-core with temporary directories and regression tests
+  for every defect listed under *Known issues* in the documentation.
+
+## [1.0.1] - 2026-10-16
+
 ### Added
 - GitHub Actions CI: ShellCheck (severity `warning`) and the test suite on Ubuntu,
   Debian bookworm and Arch Linux; documentation build with `mkdocs --strict`.
@@ -30,21 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   real `rsync --delete`. The script now tests its own first argument
   (known issue K).
 
-### Planned for 1.1.0 (see *Known issues* and *Roadmap* in the documentation)
-- Refuse sync-back when the RAM directory is empty, lacks the sentinel file, or is
-  not on tmpfs/ramfs (`require_ramfs`).
-- Signal-driven wait loop usable under systemd/nohup (no stdin dependency);
-  SIGTERM/SIGINT perform a final sync and exit.
-- Path normalisation; `rsync` used for the initial copy with the same exclude list
-  as the sync-back; top-level dotfiles included.
-- Rewritten INI parser (exact key match, paths with spaces, no pattern filtering by
-  keyword).
-- `verify_checksums` wired to `rsync --checksum`.
-- `mktemp` for temporary files; `flock` instance lock.
-- `--version`, `--sync-now`, `SIGUSR1` → immediate sync; systemd unit in `contrib/`.
-- Test suite migrated to bats-core with temporary directories and regression tests
-  for every defect listed under *Known issues* in the documentation.
-
 ## [1.0.0] - 2025-05-30
 
 ### Added
@@ -52,5 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `rsync --delete` sync-back, exclude patterns, dry-run, one-time mode, leveled
   logging to console and files, generated worker scripts, custom test suite.
 
-[Unreleased]: https://github.com/FPGArtktic/GnuRAMage/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/FPGArtktic/GnuRAMage/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/FPGArtktic/GnuRAMage/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/FPGArtktic/GnuRAMage/releases/tag/v1.0.0
