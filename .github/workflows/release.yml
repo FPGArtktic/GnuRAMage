@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches script version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          # Accept either a VERSION="x.y.z" constant or the "# Version: x.y.z" header line.
+          SCRIPT_VERSION="$(sed -nE 's/^VERSION="([^"]+)".*/\1/p' gramage.sh | head -1)"
+          if [ -z "$SCRIPT_VERSION" ]; then
+            SCRIPT_VERSION="$(sed -nE 's/^# Version: *([^ ]+).*/\1/p' gramage.sh | head -1)"
+          fi
+          echo "tag=$TAG_VERSION script=$SCRIPT_VERSION"
+          if [ "$TAG_VERSION" != "$SCRIPT_VERSION" ]; then
+            echo "::error::Tag v$TAG_VERSION does not match version in gramage.sh ($SCRIPT_VERSION)"
+            exit 1
+          fi
+
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          severity: warning
+          scandir: .
+
+      - name: Run test suite
+        working-directory: test
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq rsync
+          chmod +x ../gramage.sh ./*.sh
+          ./run_test.sh
+
+      - name: Build release assets
+        run: |
+          mkdir -p dist
+          cp gramage.sh GnuRAMage.ini dist/
+          cp LICENSE dist/LICENSE
+          (cd dist && sha256sum gramage.sh GnuRAMage.ini > SHA256SUMS)
+          cat dist/SHA256SUMS
+
+      - name: Extract changelog section
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          touch CHANGELOG.md
+          awk -v ver="$VERSION" '
+            /^## \[/ { in_section = ($0 ~ "^## \\[" ver "\\]") }
+            in_section { print }
+          ' CHANGELOG.md > dist/RELEASE_NOTES.md
+          if [ ! -s dist/RELEASE_NOTES.md ]; then
+            echo "No CHANGELOG section for $VERSION — falling back to auto-generated notes." > dist/RELEASE_NOTES.md
+          fi
+          cat dist/RELEASE_NOTES.md
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: GnuRAMage ${{ github.ref_name }}
+          body_path: dist/RELEASE_NOTES.md
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            dist/gramage.sh
+            dist/GnuRAMage.ini
+            dist/SHA256SUMS
